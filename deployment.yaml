@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jobspam
+  labels:
+    app.kubernetes.io/name: jobspam
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jobspam
+  namespace: default
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jobspam
+subjects:
+- kind: ServiceAccount
+  name: jobspam
+roleRef:
+  kind: Role
+  name: jobspam
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jobspam
+  labels:
+    app.kubernetes.io/name: jobspam
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jobspam
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jobspam
+    spec:
+      serviceAccountName: jobspam
+      containers:
+        - name: jobspam
+          image: jobspam:latest
+          imagePullPolicy: Never
